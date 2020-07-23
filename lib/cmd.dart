@@ -29,10 +29,7 @@ class SetCommand extends Command<String> {
   @override
   final description = "Saves a path with a key.";
 
-  SetCommand() {
-    // [argParser] is automatically created by the parent class.
-    argParser.addFlag('set', abbr: 's');
-  }
+  SetCommand();
 
   @override
   String get invocation => 'goto set <key> <path>';
@@ -142,10 +139,7 @@ class ListCommand extends Command<String> {
   @override
   final description = "List all saved records in a human readable format";
 
-  ListCommand() {
-    // [argParser] is automatically created by the parent class.
-    argParser.addFlag('list', abbr: 'l');
-  }
+  ListCommand();
 
   @override
   bool get takesArguments => false;

@@ -2,7 +2,7 @@
 usage_body="USAGE: wizard <command>
 
 Available commands:
-    install     Install goto for this user
+    install     Install goto for this user (updates if already installed)
     run         Run with dart
     build       Build binaries
     test        Run tests
@@ -77,16 +77,27 @@ function goto(){
     rm $GOTOFILEPATH 2> /dev/null;
 }"
 
-    mkdir "$GOTOPATH" 2> /dev/null
+    mkdir "$GOTOPATH" 2>/dev/null
     echo "$gotofunc" >$GOTOFFILE
 
     if grep -q "source $GOTOFFILE" "$SHELLRC"; then
         echo "line to source file already exists. skipping.."
     else
-        echo $GOTOFSRC >> $SHELLRC
+        echo $GOTOFSRC >>$SHELLRC
     fi
 
     echo -e "\nInstall success"
+}
+
+function uninstaller() {
+    rm -r $HOME/.local/share/goto 2>/dev/null
+    rm $HOME/bin/goto-cli 2>/dev/null
+    grep -v "$GOTOFSRC" "$SHELLRC" >"$SHELLRC.tmp" && mv "$SHELLRC.tmp" "$SHELLRC"
+    echo -e "\nUninstalled"
+}
+
+function runner() {
+    dart bin/main.dart $@;
 }
 
 case "$command" in
@@ -94,17 +105,17 @@ install)
     installer
     ;;
 build) builder ;;
-run) dart bin/main.dart ;;
+run)
+    shift
+    runner $@
+    ;;
 test) dart test/goto_test.dart ;;
 clean)
-    rm -r ./.dart_tool 2> /dev/null
-    rm bin/goto-cli 2> /dev/null
+    rm -r ./.dart_tool 2>/dev/null
+    rm bin/goto-cli 2>/dev/null
     ;;
 uninstall)
-    rm -r $HOME/.local/share/goto 2> /dev/null
-    rm $HOME/bin/goto-cli 2> /dev/null
-    grep -v "$GOTOFSRC" "$SHELLRC" > "$SHELLRC.tmp" && mv "$SHELLRC.tmp" "$SHELLRC"
-    echo -e "\nUninstalled"
+    uninstaller
     ;;
 help) usage ;;
 *)

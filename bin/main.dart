@@ -19,6 +19,8 @@ void main(List<String> arguments) {
   if (res.command == null && arguments.length == 1) {
     GoCommand(arguments, gotoCommand).run();
   } else {
-    gotoCommand.run(arguments);
+    gotoCommand.run(arguments).catchError((e) {
+      GotoError.exit(e.toString());
+    });
   }
 }

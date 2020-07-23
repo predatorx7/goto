@@ -2,7 +2,14 @@
 
 ## Upcoming
 
+Tests
 Colored error messages
+Documentation & Comments
+
+## 0.0.3
+
+Improvements in wizard.sh
+Fixed a missed future's error handling
 
 ## 0.0.2
 
