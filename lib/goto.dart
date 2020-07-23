@@ -84,6 +84,11 @@ class Goto {
     _dataFile.writeAsStringSync(jsonEncode(_data));
   }
 
+  void removeAll() {
+    _data.clear();
+    _dataFile.writeAsStringSync(jsonEncode(_data));
+  }
+
   void removeKey(String key) {
     if (!containsKey(key)) return null;
     _data.remove(key);

@@ -1,5 +1,7 @@
+import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:goto/cmd.dart';
+import 'package:goto/nerror.dart';
 
 void main(List<String> arguments) {
   final CommandRunner gotoCommand = CommandRunner<String>('goto',
@@ -8,7 +10,12 @@ void main(List<String> arguments) {
     ..addCommand(GetCommand())
     ..addCommand(ListCommand())
     ..addCommand(RemoveCommand());
-  var res = gotoCommand.parse(arguments);
+  ArgResults res;
+  try {
+    res = gotoCommand.parse(arguments);
+  } on UsageException catch (e) {
+    GotoError.exit(e.toString());
+  }
   if (res.command == null && arguments.length == 1) {
     GoCommand(arguments, gotoCommand).run();
   } else {

@@ -45,6 +45,9 @@ class SetCommand extends Command<String> {
   // [run] may also return a Future.
   @override
   Future<String> run() {
+    if (argResults.rest?.isEmpty ?? true) {
+      GotoError.missing(usage);
+    }
     String key = argResults.rest[0];
     if (!keyRegx.hasMatch(key)) {
       GotoError(
@@ -69,10 +72,8 @@ class GetCommand extends Command<String> {
   @override
   final description = "Gets a path address matching the key";
 
-  GetCommand() {
-    // [argParser] is automatically created by the parent class.
-    argParser.addFlag('get', abbr: 'g');
-  }
+  GetCommand();
+
   @override
   String get invocation => 'goto get <key>';
 
@@ -85,9 +86,7 @@ class GetCommand extends Command<String> {
     // [argResults] is set before [run()] is called and contains the options
     // passed to this command.
     if (argResults.rest?.isEmpty ?? true) {
-      GotoError.missing();
-      printUsage();
-      exit(1);
+      GotoError.missing(usage);
     }
     String key = argResults.rest[0];
     String reply = Goto().getPath(key);
@@ -108,7 +107,8 @@ class RemoveCommand extends Command<String> {
 
   RemoveCommand() {
     // [argParser] is automatically created by the parent class.
-    argParser.addFlag('remove', abbr: 'r');
+    argParser.addFlag('all',
+        abbr: 'a', help: 'Remove all saved key-value records');
   }
 
   @override
@@ -120,10 +120,13 @@ class RemoveCommand extends Command<String> {
   // [run] may also return a Future.
   @override
   Future<String> run() {
+    if (argResults['all']) {
+      // remove all
+      Goto().removeAll();
+      return null;
+    }
     if (argResults.rest?.isEmpty ?? true) {
-      GotoError.missing();
-      printUsage();
-      exit(1);
+      GotoError.missing(usage);
     }
     // [argResults] is set before [run()] is called and contains the options
     // passed to this command.

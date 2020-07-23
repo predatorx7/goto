@@ -11,7 +11,7 @@ Use Wizard to install Goto.
 $ ./wizard.sh build
 
 # ** recommended **
-# installs goto (if build already exists)
+# installs goto (if bin/goto-cli already exists)
 $ ./wizard.sh install
 ```
 
