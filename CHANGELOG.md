@@ -2,25 +2,28 @@
 
 ## Upcoming
 
-Command auto-completion
+- Issue: wizard Uninstaller can't remove source line with comments from shell user-config file (bashrc, zshrc)
+- Version & developer information
+- Tests
+- Colored error messages
+- Documentation & Comments
+- Command auto-completion
 
 ## 0.0.4
 
-Version & developer information
-Tests
-Colored error messages
-Documentation & Comments
+- Clarified goto sourcing usage
+- Updated help message in wizard
 
 ## 0.0.3
 
-Improvements in wizard.sh
-Fixed a missed future's error handling
+- Improvements in wizard.sh
+- Fixed a missed future's error handling
 
 ## 0.0.2
 
-Hide log & stacks on uncaught exceptions
-Option to remove all saved information in one command (use remove [-a|--all])
+- Hide log & stacks on uncaught exceptions
+- Option to remove all saved information in one command (use remove [-a|--all])
 
 ## 0.0.1
 
-Tested initial release. Works on Ubuntu.
+- Tested initial release. Works on Ubuntu.

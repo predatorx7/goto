@@ -2,15 +2,16 @@
 usage_body="USAGE: wizard <command>
 
 Available commands:
-    install     Install goto for this user (updates if already installed)
-    run         Run with dart
-    build       Build binaries
-    test        Run tests
+    install     Installs goto for this user's default SHELL 
+                ($SHELL for you, $USER) (updates if already installed)
+    run         Run with dart*
+    build       Build binaries*
+    test        Run tests*
     clean       Clean all build files
     uninstall   Remove goto from everywhere
     help        Show this help
     
-Some commands may require 'dart-sdk' installed and in environment path"
+*Some commands may require 'dart-sdk' installed and in environment path"
 
 command=$1
 SHELLRC=""
@@ -18,7 +19,12 @@ GOTOPATH=$HOME/.local/share/goto
 GOTOFILEPATH=$GOTOPATH/.goto
 GOTOFFILE=$GOTOPATH/funcgoto
 
-GOTOFSRC="source $GOTOFFILE"
+GOTOFSRC="
+# >>> goto >>>>
+# The below line sources goto's helper function file.
+# The file is necessary to let goto operate properly.
+source $GOTOFFILE
+# <<< goto <<<<"
 
 # Determine shellrc file
 case "${SHELL}" in
@@ -83,7 +89,7 @@ function goto(){
     if grep -q "source $GOTOFFILE" "$SHELLRC"; then
         echo "line to source file already exists. skipping.."
     else
-        echo $GOTOFSRC >>$SHELLRC
+        echo "$GOTOFSRC" >>$SHELLRC
     fi
 
     echo -e "\nInstall success"
