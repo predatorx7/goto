@@ -2,6 +2,11 @@
 
 ## Upcoming
 
+Command auto-completion
+
+## 0.0.4
+
+Version & developer information
 Tests
 Colored error messages
 Documentation & Comments
