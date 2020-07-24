@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 usage_body="USAGE: wizard <command>
 
 Available commands:
@@ -26,12 +26,14 @@ GOTOFSRC="
 source $GOTOFFILE
 # <<< goto <<<<"
 
+DEFAULT_SHELL="$(basename "$(grep "^$USER" /etc/passwd)")"
+
 # Determine shellrc file
-case "${SHELL}" in
-/bin/zsh)
+case "${DEFAULT_SHELL}" in
+zsh)
     SHELLRC=$HOME/.zshrc
     ;;
-/bin/bash)
+bash)
     # Determine machine.
     case "$(uname -s)" in
     Linux*) SHELLRC=$HOME/.bashrc ;;
