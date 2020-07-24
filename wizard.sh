@@ -14,7 +14,7 @@ Available commands:
 *Some commands may require 'dart-sdk' installed and in environment path"
 
 command=$1
-SHELLRC=""
+SHELL_CONFIG_FILE=""
 GOTOPATH=$HOME/.local/share/goto
 GOTOFILEPATH=$GOTOPATH/.goto
 GOTOFFILE=$GOTOPATH/funcgoto
@@ -31,13 +31,13 @@ DEFAULT_SHELL="$(basename "$(grep "^$USER" /etc/passwd)")"
 # Determine shellrc file
 case "${DEFAULT_SHELL}" in
 zsh)
-    SHELLRC=$HOME/.zshrc
+    SHELL_CONFIG_FILE=$HOME/.zshrc
     ;;
 bash)
     # Determine machine.
     case "$(uname -s)" in
-    Linux*) SHELLRC=$HOME/.bashrc ;;
-    Darwin*) SHELLRC=$HOME/.bash_profile ;;
+    Linux*) SHELL_CONFIG_FILE=$HOME/.bashrc ;;
+    Darwin*) SHELL_CONFIG_FILE=$HOME/.bash_profile ;;
     *)
         echo "Machine ${unameOut} not supported"
         exit 1
@@ -61,16 +61,17 @@ function builder() {
 
 function installer() {
     # set PATH so it includes user's private bin if it exists
-    if [ -d "$HOME/bin" ]; then
+    if [ -d "$HOME/.local/bin" ]; then
         if [ -f bin/goto-cli ]; then
-            cp bin/goto-cli $HOME/bin/goto-cli
+            rm $HOME/bin/goto-cli 2> /dev/null; # remove old bin
+            cp bin/goto-cli $HOME/.local/bin/goto-cli
             chmod +x $HOME/bin/goto-cli
         else
             echo "No pre-built binary found. Use 'wizard build'"
             exit 1
         fi
     else
-        echo "ERROR: ensure $HOME/bin is in environment PATH"
+        echo "ERROR: ensure $HOME/.local/bin is in environment PATH"
         exit 1
     fi
 
@@ -88,10 +89,10 @@ function goto(){
     mkdir "$GOTOPATH" 2>/dev/null
     echo "$gotofunc" >$GOTOFFILE
 
-    if grep -q "source $GOTOFFILE" "$SHELLRC"; then
+    if grep -q "source $GOTOFFILE" "$SHELL_CONFIG_FILE"; then
         echo "Instructions to source file already exists in shell config. skipping.."
     else
-        echo "$GOTOFSRC" >>$SHELLRC
+        echo "$GOTOFSRC" >>$SHELL_CONFIG_FILE
     fi
 
     echo -e "\nInstall success"
@@ -100,7 +101,7 @@ function goto(){
 function uninstaller() {
     rm -r $HOME/.local/share/goto 2>/dev/null
     rm $HOME/bin/goto-cli 2>/dev/null
-    grep -v "$GOTOFSRC" "$SHELLRC" >"$SHELLRC.tmp" && mv "$SHELLRC.tmp" "$SHELLRC"
+    grep -v "$GOTOFSRC" "$SHELL_CONFIG_FILE" >"$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
     echo -e "\nUninstalled"
 }
 

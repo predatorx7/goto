@@ -6,6 +6,10 @@
 - Tests
 - Command auto-completion
 
+## 0.0.5
+
+- Fix env & portability issues
+
 ## 0.0.4
 
 - Version & developer information
