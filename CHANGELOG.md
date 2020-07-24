@@ -9,6 +9,7 @@
 ## 0.0.5
 
 - Fix env & portability issues
+- Avoid installation for root
 
 ## 0.0.4
 

@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+if [ "$(basename $HOME)" == root ]; then
+    echo "ERROR: Cannot install for root"
+    exit 1
+fi
+
 usage_body="USAGE: wizard <command>
 
 Available commands:
@@ -63,9 +69,9 @@ function installer() {
     # set PATH so it includes user's private bin if it exists
     if [ -d "$HOME/.local/bin" ]; then
         if [ -f bin/goto-cli ]; then
-            rm $HOME/bin/goto-cli 2> /dev/null; # remove old bin
+            rm $HOME/bin/goto-cli 2>/dev/null # remove old bin
             cp bin/goto-cli $HOME/.local/bin/goto-cli
-            chmod +x $HOME/bin/goto-cli
+            chmod +x $HOME/.local/bin/goto-cli
         else
             echo "No pre-built binary found. Use 'wizard build'"
             exit 1
@@ -101,18 +107,19 @@ function goto(){
 function uninstaller() {
     rm -r $HOME/.local/share/goto 2>/dev/null
     rm $HOME/bin/goto-cli 2>/dev/null
+    rm $HOME/.local/bin/goto-cli 2>/dev/null
     grep -v "$GOTOFSRC" "$SHELL_CONFIG_FILE" >"$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
     echo -e "\nUninstalled"
 }
 
 function runner() {
-    dart bin/main.dart $@;
+    dart bin/main.dart $@
     if [ -f "$GOTOFILEPATH" ]; then
         GOTOADD="$(cat $(echo $GOTOFILEPATH))"
         echo "Teleporting :$1: => $GOTOADD"
         echo "[Will not work in this config.]"
     fi
-    rm $GOTOFILEPATH 2> /dev/null;
+    rm $GOTOFILEPATH 2>/dev/null
 }
 
 case "$command" in
