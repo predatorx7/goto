@@ -4,6 +4,13 @@ import 'package:args/command_runner.dart';
 import 'package:goto/goto.dart';
 import 'package:goto/nerror.dart';
 
+/// When no other commands are executed then the argument specifies a &lt;key&gt;
+///
+/// That &lt;key&gt; represents a path and if it's valid and exists, this will
+/// save a temporary file with that &lt;key&gt;'s path as content.
+///
+/// The goto function sourced in shell config file will change directory to
+/// that path if the temporary file exists.
 class GoCommand {
   final List<String> arguments;
   final CommandRunner parser;
@@ -21,6 +28,7 @@ class GoCommand {
   }
 }
 
+/// Saves a path with key
 class SetCommand extends Command<String> {
   // The [name] and [description] properties must be defined by every
   // subclass.
@@ -61,6 +69,7 @@ class SetCommand extends Command<String> {
   }
 }
 
+/// Retrieves and prints a path for a key
 class GetCommand extends Command<String> {
   // The [name] and [description] properties must be defined by every
   // subclass.
@@ -94,6 +103,7 @@ class GetCommand extends Command<String> {
   }
 }
 
+/// Remove a saved key-path or remove all saved key-paths
 class RemoveCommand extends Command<String> {
   // The [name] and [description] properties must be defined by every
   // subclass.
@@ -131,6 +141,7 @@ class RemoveCommand extends Command<String> {
   }
 }
 
+/// Lists all saved key-path pairs in human readable format
 class ListCommand extends Command<String> {
   // The [name] and [description] properties must be defined by every
   // subclass.

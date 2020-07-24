@@ -17,15 +17,17 @@ $ ./wizard.sh install
 
 ## Usage
 
+&lt;key&gt; must only have alphabets, numbers, underscore and it should not be any command name or an alias of any command.
+
 Use `goto <key>` to redirect to &lt;key&gt;'s path
 
 or just `goto <command> [arguments]`
 
 ### Global options
 
--h, --help Print this usage information.
+-h, --help Prints usage information.
 
-### Available commands
+### Available commands (with their aliases)
 
 #### get, g
 
@@ -51,9 +53,11 @@ Run `goto help <command>` for more information about a command.
 ### run goto help
 $ goto help
 
-
-### run current directory with key "games"
+### Save current directory with key "games"
 $ goto set games .
+
+### Save directory with key "scr"
+$ goto set scr /home/syed/Work/scripts
 ```
 
 ## Development

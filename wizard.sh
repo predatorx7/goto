@@ -87,7 +87,7 @@ function goto(){
     echo "$gotofunc" >$GOTOFFILE
 
     if grep -q "source $GOTOFFILE" "$SHELLRC"; then
-        echo "line to source file already exists. skipping.."
+        echo "Instructions to source file already exists in shell config. skipping.."
     else
         echo "$GOTOFSRC" >>$SHELLRC
     fi
@@ -104,6 +104,12 @@ function uninstaller() {
 
 function runner() {
     dart bin/main.dart $@;
+    if [ -f "$GOTOFILEPATH" ]; then
+        GOTOADD="$(cat $(echo $GOTOFILEPATH))"
+        echo "Teleporting :$1: => $GOTOADD"
+        echo "[Will not work in this config.]"
+    fi
+    rm $GOTOFILEPATH 2> /dev/null;
 }
 
 case "$command" in

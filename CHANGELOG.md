@@ -3,16 +3,15 @@
 ## Upcoming
 
 - Issue: wizard Uninstaller can't remove source line with comments from shell user-config file (bashrc, zshrc)
-- Version & developer information
 - Tests
-- Colored error messages
-- Documentation & Comments
 - Command auto-completion
 
 ## 0.0.4
 
+- Version & developer information
 - Clarified goto sourcing usage
 - Updated help message in wizard
+- Colored error messages
 
 ## 0.0.3
 

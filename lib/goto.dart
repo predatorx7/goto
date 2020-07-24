@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 
 import 'nerror.dart';
 
+/// Returns path for save file for this platform & user
 String _saveFile() {
   String home = "";
   Map<String, String> envVars = Platform.environment;
@@ -15,11 +16,13 @@ String _saveFile() {
   } else if (Platform.isWindows) {
     // home = envVars['UserProfile'];
     // TODO: Determine save path
-    throw PathException('Windows not supported');
+    GotoError.exit('Windows not supported');
   }
   return join(home, '.local', 'share', 'goto', 'data.json');
 }
 
+/// Returns path for temp file for this platform & user which
+/// will be used by goto function to navigate.
 String _gotoFile() {
   String home = "";
   Map<String, String> envVars = Platform.environment;
@@ -30,26 +33,35 @@ String _gotoFile() {
   } else if (Platform.isWindows) {
     // home = envVars['UserProfile'];
     // TODO: Determine goto path
-    throw PathException('Windows not supported');
+    GotoError.exit('Windows not supported');
   }
   return join(home, '.local', 'share', 'goto', '.goto');
 }
 
 class Goto {
+  /// This constructor is meant to be used by the public factory
   Goto._(this._dataFile, this._data);
 
+  /// Stores a singleton instance of this class
   static Goto _cache;
 
+  /// Returns a Goto class singleton
   factory Goto() {
     if (_cache != null) return _cache;
     final String _savePath = _saveFile();
+
+    /// Load & return storage file and data synchronously
     final List load = _loadSync(_savePath);
+
+    /// Create an instance of Goto with data above
     _cache = Goto._(load[0] as File, load[1] as Map<String, String>);
     return _cache;
   }
 
+  /// The data which is synced with the save file.
   final Map<String, String> _data;
 
+  /// The save file where the data will be persisted
   final File _dataFile;
 
   Map<String, String> get data => _data;
@@ -73,28 +85,35 @@ class Goto {
     return [file, data];
   }
 
+  /// Check if key exists in save file (_data map is used as it's in sync with save
+  /// file)
   bool containsKey(String key) => _data.containsKey(key);
 
+  /// Saves a key-path pair in save file
   void setKey(String key, String value) {
     final Directory dir = Directory(value);
     if (!dir.existsSync()) {
-      throw FileSystemException('Not a directory', value);
+      GotoError.warn(
+          '"$value" not found. It either does not exist or is not a directory.');
     }
     _data[key] = value;
     _dataFile.writeAsStringSync(jsonEncode(_data));
   }
 
+  /// Remove all data from save file
   void removeAll() {
     _data.clear();
     _dataFile.writeAsStringSync(jsonEncode(_data));
   }
 
+  /// Remove a key from save file
   void removeKey(String key) {
     if (!containsKey(key)) return null;
     _data.remove(key);
     _dataFile.writeAsStringSync(jsonEncode(_data));
   }
 
+  /// Returns path with key
   String getPath(String key) {
     if (!containsKey(key)) return null;
     return _data[key];
@@ -108,7 +127,8 @@ class Goto {
     String value = _data[key];
     Directory dir = Directory(value);
     if (!dir.existsSync()) {
-      GotoError('$value Directory does not exist');
+      GotoError.warn(
+          '"$value" not found. It either does not exist or is not a directory.');
     }
     File _gotofile = File(_gotoFile());
     _gotofile.createSync();
