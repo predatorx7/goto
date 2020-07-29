@@ -6,13 +6,24 @@ Keeps a key-value record of paths you wish to save for quick access later
 
 Use Wizard to install Goto.
 
+Just enter the below line in your terminal.
+
+```sh
+./wizard.sh install
+```
+
+This will do a regular installation for the latest version of goto.
+
+---
+
+You can also build and install goto from any commit of this repository
+
 ```sh
 # build (needs dart installed)
 $ ./wizard.sh build
 
-# ** recommended **
 # installs goto (if bin/goto-cli already exists)
-$ ./wizard.sh install
+$ ./wizard.sh installb
 ```
 
 ## Usage
@@ -41,6 +52,10 @@ or just `goto <command> [arguments]`
 
 - Removes a record matching the key
 
+#### rename, re
+
+- Renames a key
+
 #### set, save, s
 
 - Saves a path with a key.
@@ -57,7 +72,7 @@ $ goto help
 $ goto set games .
 
 ### Save directory with key "scr"
-$ goto set scr /home/syed/Work/scripts
+$ goto set scr /home/xyz/Work/scripts
 ```
 
 ## Development

@@ -6,6 +6,10 @@
 - Command auto-completion
 - Support root-user install
 
+## 0.0.7
+
+- Option to install goto from latest tag
+
 ## 0.0.6
 
 - Command to rename keys

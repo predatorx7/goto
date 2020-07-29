@@ -8,15 +8,16 @@ fi
 usage_body="USAGE: wizard <command>
 
 Available commands:
-    install     Installs goto for this user's default SHELL 
-                ($SHELL for you, $USER) (updates if already installed)
+    install     Installs goto (updates if already installed)
     run         Run with dart*
+    installb    Installs build
     build       Build binaries*
     test        Run tests*
     clean       Clean all build files
     uninstall   Remove goto from everywhere
     help        Show this help
-    
+
+('$SHELL' is your default shell, $USER)
 *Some commands may require 'dart-sdk' installed and in environment path"
 
 command=$1
@@ -77,6 +78,16 @@ function usage() {
 function builder() {
     pub get
     dart2native bin/main.dart -o bin/goto-cli
+}
+
+function switchToLatest() {
+    cd "$(dirname "$0")"
+    git checkout master 2>/dev/null
+    git pull origin master 2>/dev/null
+    latesttag=$(git describe --tags) 2>/dev/null
+    echo switching to ${latesttag}
+    git checkout ${latesttag} 2>/dev/null
+    git switch - 2>/dev/null
 }
 
 function installer() {
@@ -163,6 +174,10 @@ function cleanup() {
 
 case "$command" in
 install)
+    switchToLatest
+    installer
+    ;;
+installb)
     installer
     ;;
 build) builder ;;
