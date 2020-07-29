@@ -10,15 +10,17 @@ void main(List<String> arguments) {
   // goto cli's command runner interface
   final CommandRunner<String> gotoCommand = CommandRunner<String>('goto',
       'Goto keeps a key-value record of paths you wish to save for quick access later.\n\nUse "goto <key>" to redirect to <key>\'s path')
-    ..addCommand(SetCommand())
+    // Add commands to the cli
     ..addCommand(GetCommand())
     ..addCommand(ListCommand())
-    ..addCommand(RemoveCommand());
-
-  gotoCommand.argParser.addFlag('version',
-      abbr: 'V',
-      help: 'Output version information and exit',
-      callback: version);
+    ..addCommand(RemoveCommand())
+    ..addCommand(RenameCommand())
+    ..addCommand(SetCommand())
+    // Add about-version details to cli
+    ..argParser.addFlag('version',
+        abbr: 'V',
+        help: 'Output version information and exit',
+        callback: version);
 
   try {
     // Parse commands, options & flags

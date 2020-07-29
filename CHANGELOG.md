@@ -2,9 +2,16 @@
 
 ## Upcoming
 
-- Issue: wizard Uninstaller can't remove source line with comments from shell user-config file (bashrc, zshrc)
 - Tests
 - Command auto-completion
+- Support root-user install
+
+## 0.0.6
+
+- Command to rename keys
+- Only accept legal key names (which must also not include any command names)
+- Prompt before removing save files when uninstalling via wizard.sh
+- Fix: wizard Uninstaller can't remove source line with comments from shell user-config file (bashrc, zshrc)
 
 ## 0.0.5
 

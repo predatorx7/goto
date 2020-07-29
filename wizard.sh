@@ -32,6 +32,14 @@ GOTOFSRC="
 source $GOTOFFILE
 # <<< goto <<<<"
 
+GOTOFSRC_array=(
+    "# >>> goto >>>>"
+    "# The below line sources goto's helper function file."
+    "# The file is necessary to let goto operate properly."
+    "source $GOTOFFILE"
+    "# <<< goto <<<<"
+)
+
 DEFAULT_SHELL="$(basename "$(grep "^$USER" /etc/passwd)")"
 
 # Determine shellrc file
@@ -43,7 +51,13 @@ bash)
     # Determine machine.
     case "$(uname -s)" in
     Linux*) SHELL_CONFIG_FILE=$HOME/.bashrc ;;
-    Darwin*) SHELL_CONFIG_FILE=$HOME/.bash_profile ;;
+    Darwin*)
+        SHELL_CONFIG_FILE=$HOME/.bash_profile
+        if [[ ! -f "$SHELL_CONFIG_FILE" ]]; then
+            echo "~/.bash_profile does not exist. Creating it now.."
+            touch "$SHELL_CONFIG_FILE"
+        fi
+        ;;
     *)
         echo "Machine ${unameOut} not supported"
         exit 1
@@ -69,7 +83,10 @@ function installer() {
     # set PATH so it includes user's private bin if it exists
     if [ -d "$HOME/.local/bin" ]; then
         if [ -f bin/goto-cli ]; then
-            rm $HOME/bin/goto-cli 2>/dev/null # remove old bin
+            if [ -f $HOME/bin/goto-cli ]; then
+                # remove old installed bin
+                rm $HOME/bin/goto-cli 2>/dev/null
+            fi
             cp bin/goto-cli $HOME/.local/bin/goto-cli
             chmod +x $HOME/.local/bin/goto-cli
         else
@@ -77,7 +94,7 @@ function installer() {
             exit 1
         fi
     else
-        echo "ERROR: ensure $HOME/.local/bin is in environment PATH"
+        echo "ERROR: ensure $HOME/.local/bin exists & is in environment PATH"
         exit 1
     fi
 
@@ -104,11 +121,23 @@ function goto(){
     echo -e "\nInstall success"
 }
 
+function removeSourcingInformation() {
+    for line in "${GOTOFSRC_array[@]}"; do
+        grep -v "$line" "$SHELL_CONFIG_FILE" >"$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
+    done
+}
+
 function uninstaller() {
-    rm -r $HOME/.local/share/goto 2>/dev/null
+    if [[ -d "$HOME/.local/share/goto" ]]; then
+        read -p "This will remove all saved key-paths. Are you sure? (Y/n): " -n 1 -r
+        echo # (optional) move to a new line
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            rm -r $HOME/.local/share/goto 2>/dev/null
+        fi
+    fi
     rm $HOME/bin/goto-cli 2>/dev/null
     rm $HOME/.local/bin/goto-cli 2>/dev/null
-    grep -v "$GOTOFSRC" "$SHELL_CONFIG_FILE" >"$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
+    removeSourcingInformation
     echo -e "\nUninstalled"
 }
 
@@ -116,10 +145,20 @@ function runner() {
     dart bin/main.dart $@
     if [ -f "$GOTOFILEPATH" ]; then
         GOTOADD="$(cat $(echo $GOTOFILEPATH))"
-        echo "Teleporting :$1: => $GOTOADD"
-        echo "[Will not work in this config.]"
+        echo "With key '$1', the directory must change to $GOTOADD if goto was installed"
+        echo "[Will not work in this run]"
     fi
     rm $GOTOFILEPATH 2>/dev/null
+}
+
+function cleanup() {
+    echo "Removing unnecessary files"
+    if [ -d ".dart_tool" ]; then
+        rm -r .dart_tool
+    fi
+    if [ -f "bin/goto-cli" ]; then
+        rm bin/goto-cli 2>/dev/null
+    fi
 }
 
 case "$command" in
@@ -133,8 +172,7 @@ run)
     ;;
 test) dart test/goto_test.dart ;;
 clean)
-    rm -r ./.dart_tool 2>/dev/null
-    rm bin/goto-cli 2>/dev/null
+    cleanup
     ;;
 uninstall)
     uninstaller

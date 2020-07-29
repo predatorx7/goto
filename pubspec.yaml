@@ -1,6 +1,6 @@
 name: goto
 description: Goto keeps a key-value record of paths you wish to save for quick access later.
-version: 0.0.5
+version: 0.0.6
 homepage: https://github.com/predatorx7/goto
 publish_to: 'none'
 

@@ -15,7 +15,7 @@ String _saveFile() {
     home = envVars['HOME'];
   } else if (Platform.isWindows) {
     // home = envVars['UserProfile'];
-    // TODO: Determine save path
+    // TODO: Determine save path for windows
     GotoError.exit('Windows not supported');
   }
   return join(home, '.local', 'share', 'goto', 'data.json');
@@ -32,21 +32,21 @@ String _gotoFile() {
     home = envVars['HOME'];
   } else if (Platform.isWindows) {
     // home = envVars['UserProfile'];
-    // TODO: Determine goto path
+    // TODO: Determine goto file path for windows
     GotoError.exit('Windows not supported');
   }
   return join(home, '.local', 'share', 'goto', '.goto');
 }
 
-class Goto {
+class _Goto {
   /// This constructor is meant to be used by the public factory
-  Goto._(this._dataFile, this._data);
+  const _Goto._(this._dataFile, this._data);
 
   /// Stores a singleton instance of this class
-  static Goto _cache;
+  static _Goto _cache;
 
   /// Returns a Goto class singleton
-  factory Goto() {
+  factory _Goto() {
     if (_cache != null) return _cache;
     final String _savePath = _saveFile();
 
@@ -54,7 +54,7 @@ class Goto {
     final List load = _loadSync(_savePath);
 
     /// Create an instance of Goto with data above
-    _cache = Goto._(load[0] as File, load[1] as Map<String, String>);
+    _cache = _Goto._(load[0] as File, load[1] as Map<String, String>);
     return _cache;
   }
 
@@ -85,6 +85,25 @@ class Goto {
     return [file, data];
   }
 
+  /// Writes latest k-v [_data] to [_dataFile]
+  void _save() {
+    _dataFile.writeAsStringSync(jsonEncode(_data));
+  }
+
+  void _keyAlreadyExists(String key) {
+    if (_data.containsKey(key)) {
+      // Key already exists in the save file
+      stdout.write(
+          "A path saved with '$key' already exists. This will remove '${_data[key]}' from entries.\nDo you wish to continue? (Y/n): ");
+      // Ask user for a response
+      var reply = stdin.readLineSync(encoding: Encoding.getByName('utf-8'));
+      if (!['Y', 'y'].contains(reply[0])) {
+        // User does not wish to continue. exit.
+        exit(0);
+      }
+    }
+  }
+
   /// Check if key exists in save file (_data map is used as it's in sync with save
   /// file)
   bool containsKey(String key) => _data.containsKey(key);
@@ -94,23 +113,32 @@ class Goto {
     final Directory dir = Directory(value);
     if (!dir.existsSync()) {
       GotoError.warn(
-          '"$value" not found. It either does not exist or is not a directory.');
+          "'$value' not found. It either does not exist or is not a directory.");
     }
+    _keyAlreadyExists(key);
     _data[key] = value;
-    _dataFile.writeAsStringSync(jsonEncode(_data));
+    _save();
   }
 
   /// Remove all data from save file
   void removeAll() {
     _data.clear();
-    _dataFile.writeAsStringSync(jsonEncode(_data));
+    _save();
+  }
+
+  void rename(String oldKey, String newKey) {
+    if (!_data.containsKey(oldKey)) return null;
+    _keyAlreadyExists(newKey);
+    _data[newKey] = _data[oldKey];
+    _data.remove(oldKey);
+    _save();
   }
 
   /// Remove a key from save file
   void removeKey(String key) {
     if (!containsKey(key)) return null;
     _data.remove(key);
-    _dataFile.writeAsStringSync(jsonEncode(_data));
+    _save();
   }
 
   /// Returns path with key
@@ -122,17 +150,23 @@ class Goto {
   /// Writes path to .goto file which will be picked by goto shell function
   void gotoPath(String key) {
     if (!containsKey(key)) {
-      GotoError('Key "$key" not assigned to any path');
+      GotoError("Key '$key' not assigned to any path");
     }
     String value = _data[key];
     Directory dir = Directory(value);
     if (!dir.existsSync()) {
       GotoError.warn(
-          '"$value" not found. It either does not exist or is not a directory.');
+          "'$value' not found. It either does not exist or is not a directory.");
     }
     File _gotofile = File(_gotoFile());
-    _gotofile.createSync();
+    try {
+      _gotofile.createSync();
+    } catch (e) {
+      GotoError('An unexpected error occurred');
+    }
     _gotofile.writeAsStringSync(value);
     // goto function must continue from here
   }
 }
+
+final _Goto Goto = _Goto();
