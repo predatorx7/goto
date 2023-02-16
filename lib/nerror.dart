@@ -2,7 +2,7 @@ import 'dart:io' show exit;
 import 'package:colorize/colorize.dart';
 
 class GotoError {
-  GotoError([String reason]) {
+  GotoError(String reason) {
     Colorize err = Colorize('[Goto] $reason');
     err.apply(Styles.YELLOW);
     err.italic();
@@ -21,7 +21,7 @@ class GotoError {
     print(exitmsg);
     exit(1);
   }
-  GotoError.warn([String reason]) {
+  GotoError.warn(String reason) {
     Colorize err = Colorize(reason);
     err.apply(Styles.YELLOW);
     err.italic();

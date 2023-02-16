@@ -5,36 +5,24 @@ import 'package:path/path.dart';
 
 import 'nerror.dart';
 
+String _getPlatformHomeDirectory() {
+  final home = Platform.environment['HOME'];
+  if (home == null || home.isEmpty) {
+    throw GotoError.exit('Could not find user home directory');
+  }
+  return home;
+}
+
 /// Returns path for save file for this platform & user
 String _saveFile() {
-  String home = "";
-  Map<String, String> envVars = Platform.environment;
-  if (Platform.isMacOS) {
-    home = envVars['HOME'];
-  } else if (Platform.isLinux) {
-    home = envVars['HOME'];
-  } else if (Platform.isWindows) {
-    // home = envVars['UserProfile'];
-    // TODO: Determine save path for windows
-    GotoError.exit('Windows not supported');
-  }
+  final home = _getPlatformHomeDirectory();
   return join(home, '.local', 'share', 'goto', 'data.json');
 }
 
 /// Returns path for temp file for this platform & user which
 /// will be used by goto function to navigate.
 String _gotoFile() {
-  String home = "";
-  Map<String, String> envVars = Platform.environment;
-  if (Platform.isMacOS) {
-    home = envVars['HOME'];
-  } else if (Platform.isLinux) {
-    home = envVars['HOME'];
-  } else if (Platform.isWindows) {
-    // home = envVars['UserProfile'];
-    // TODO: Determine goto file path for windows
-    GotoError.exit('Windows not supported');
-  }
+  final home = _getPlatformHomeDirectory();
   return join(home, '.local', 'share', 'goto', '.goto');
 }
 
@@ -43,19 +31,19 @@ class _Goto {
   const _Goto._(this._dataFile, this._data);
 
   /// Stores a singleton instance of this class
-  static _Goto _cache;
+  static _Goto? _cache;
 
   /// Returns a Goto class singleton
   factory _Goto() {
-    if (_cache != null) return _cache;
-    final String _savePath = _saveFile();
+    if (_cache != null) return _cache!;
+    final String saveFile = _saveFile();
 
     /// Load & return storage file and data synchronously
-    final List load = _loadSync(_savePath);
+    final List load = _loadSync(saveFile);
 
     /// Create an instance of Goto with data above
     _cache = _Goto._(load[0] as File, load[1] as Map<String, String>);
-    return _cache;
+    return _cache!;
   }
 
   /// The data which is synced with the save file.
@@ -94,10 +82,11 @@ class _Goto {
     if (_data.containsKey(key)) {
       // Key already exists in the save file
       stdout.write(
-          "A path saved with '$key' already exists. This will remove '${_data[key]}' from entries.\nDo you wish to continue? (Y/n): ");
+        "A path saved with '$key' already exists. This will remove '${_data[key]}' from entries.\nDo you wish to continue? (Y/n): ",
+      );
       // Ask user for a response
-      var reply = stdin.readLineSync(encoding: Encoding.getByName('utf-8'));
-      if (!['Y', 'y'].contains(reply[0])) {
+      var reply = stdin.readLineSync() ?? '';
+      if (!reply.toLowerCase().startsWith('y')) {
         // User does not wish to continue. exit.
         exit(0);
       }
@@ -113,7 +102,8 @@ class _Goto {
     final Directory dir = Directory(value);
     if (!dir.existsSync()) {
       GotoError.warn(
-          "'$value' not found. It either does not exist or is not a directory.");
+        "'$value' not found. It either does not exist or is not a directory.",
+      );
     }
     _keyAlreadyExists(key);
     _data[key] = value;
@@ -127,22 +117,22 @@ class _Goto {
   }
 
   void rename(String oldKey, String newKey) {
-    if (!_data.containsKey(oldKey)) return null;
+    if (!_data.containsKey(oldKey)) return;
     _keyAlreadyExists(newKey);
-    _data[newKey] = _data[oldKey];
+    _data[newKey] = _data[oldKey]!;
     _data.remove(oldKey);
     _save();
   }
 
   /// Remove a key from save file
   void removeKey(String key) {
-    if (!containsKey(key)) return null;
+    if (!containsKey(key)) return;
     _data.remove(key);
     _save();
   }
 
   /// Returns path with key
-  String getPath(String key) {
+  String? getPath(String key) {
     if (!containsKey(key)) return null;
     return _data[key];
   }
@@ -152,21 +142,23 @@ class _Goto {
     if (!containsKey(key)) {
       GotoError("Key '$key' not assigned to any path");
     }
-    String value = _data[key];
+    String value = _data[key]!;
     Directory dir = Directory(value);
     if (!dir.existsSync()) {
       GotoError.warn(
-          "'$value' not found. It either does not exist or is not a directory.");
+        "'$value' not found. It either does not exist or is not a directory.",
+      );
     }
-    File _gotofile = File(_gotoFile());
+    final File gotofile = File(_gotoFile());
     try {
-      _gotofile.createSync();
+      gotofile.createSync();
     } catch (e) {
       GotoError('An unexpected error occurred');
     }
-    _gotofile.writeAsStringSync(value);
+    gotofile.writeAsStringSync(value);
     // goto function must continue from here
   }
 }
 
-final _Goto Goto = _Goto();
+// ignore: non_constant_identifier_names
+final Goto = _Goto();

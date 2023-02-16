@@ -27,7 +27,7 @@ void main(List<String> arguments) {
     res = gotoCommand.parse(arguments);
   } on UsageException catch (e) {
     // Shows clean error on wrong usage
-    GotoError.exit(e.toString());
+    throw GotoError.exit(e.toString());
   }
 
   if (res.command == null && arguments.length == 1) {

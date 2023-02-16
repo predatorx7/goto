@@ -94,24 +94,24 @@ class RenameCommand extends ExtendedCommand {
   // [run] may also return a Future.
   @override
   Future<String> run() {
-    if ((argResults.rest?.isEmpty ?? true) ||
-        (argResults.rest?.length ?? 0) < 2) {
-      GotoError.missing(usage);
+    final rest = argResults?.rest;
+    if (rest == null || rest.isEmpty || rest.length < 2) {
+      throw GotoError.missing(usage);
     }
-    final String previousKeyName = argResults.rest[0];
-    final String newKeyName = argResults.rest[1];
+    final String previousKeyName = rest[0];
+    final String newKeyName = rest[1];
     // Check if previousKeyExists, else throw KeyNotFound
     if (!Goto.containsKey(previousKeyName)) {
-      GotoError("Found no path with '$previousKeyName' key");
-      return null;
+      throw GotoError("Found no path with '$previousKeyName' key");
     }
     if (previousKeyName == newKeyName) {
-      GotoError.exit('Error: Old & new key names must not be same.');
+      throw GotoError.exit('Error: Old & new key names must not be same.');
     }
     // If exists, remove that key and replace it with new key-name else.
     isKeyValid(newKeyName);
     print("Renaming key '$previousKeyName' with '$newKeyName'.. ");
     Goto.rename(previousKeyName, newKeyName);
+    return Future.value('');
   }
 }
 
@@ -135,19 +135,19 @@ class SetCommand extends ExtendedCommand {
   // [run] may also return a Future.
   @override
   Future<String> run() {
-    if (argResults.rest?.isEmpty ?? true) {
-      GotoError.missing(usage);
+    final rest = argResults?.rest;
+    if (rest == null || rest.isEmpty) {
+      throw GotoError.missing(usage);
     }
-    String key = argResults.rest[0];
+    String key = rest[0];
     isKeyValid(key);
-    String value = (argResults.rest.length == 1)
-        ? Directory.current.path
-        : argResults.rest[1];
+    String value = (rest.length == 1) ? Directory.current.path : rest[1];
     if (value == '.') {
       value = Directory.current.path;
     }
     print('Saving "$value" with key "$key".. ');
     Goto.setKey(key, value);
+    return Future.value('');
   }
 }
 
@@ -173,15 +173,17 @@ class GetCommand extends ExtendedCommand {
   Future<String> run() {
     // [argResults] is set before [run()] is called and contains the options
     // passed to this command.
-    if (argResults.rest?.isEmpty ?? true) {
-      GotoError.missing(usage);
+    final rest = argResults?.rest;
+    if (rest == null || rest.isEmpty) {
+      throw GotoError.missing(usage);
     }
-    String key = argResults.rest[0];
-    String reply = Goto.getPath(key);
+    final String key = rest[0];
+    final String? reply = Goto.getPath(key);
     if (reply == null) {
-      GotoError("Found no path with '$key' key");
+      throw GotoError("Found no path with '$key' key");
     }
-    print('$key -> ${reply}');
+    print('$key -> $reply');
+    return Future.value('');
   }
 }
 
@@ -209,17 +211,20 @@ class RemoveCommand extends ExtendedCommand {
   // [run] may also return a Future.
   @override
   Future<String> run() {
-    if (argResults['all']) {
+    final isAllFlagEnabled = argResults?['all'] == true;
+    if (isAllFlagEnabled) {
       // remove all
       Goto.removeAll();
-      return null;
+      return Future.value('');
     }
-    if (argResults.rest?.isEmpty ?? true) {
-      GotoError.missing(usage);
+    final rest = argResults?.rest;
+    if (rest == null || rest.isEmpty) {
+      throw GotoError.missing(usage);
     }
     // [argResults] is set before [run()] is called and contains the options
     // passed to this command.
-    Goto.removeKey(argResults.rest[0]);
+    Goto.removeKey(rest[0]);
+    return Future.value('');
   }
 }
 
@@ -249,10 +254,11 @@ class ListCommand extends ExtendedCommand {
     Map data = Goto.data;
     if (data.isEmpty) {
       print('No saved records');
-      return null;
+      return Future.value('');
     }
     for (var item in data.keys) {
       print('$item: ${data[item]}');
     }
+    return Future.value('');
   }
 }
