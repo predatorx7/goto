@@ -82,8 +82,8 @@ function usage() {
 }
 
 function builder() {
-    pub get
-    dart2native bin/main.dart -o bin/goto-cli
+    dart pub get
+    dart compile exe bin/main.dart -o bin/goto-cli
 }
 
 function switchToLatest() {
@@ -94,7 +94,7 @@ function switchToLatest() {
     echo switching to ${latesttag}
     git checkout --quiet ${latesttag} 2>/dev/null
 }
-
+DID_ATTEMPT_BUILD=false
 function installer() {
     # set PATH so it includes user's private bin if it exists
     if [[ :$PATH: != *:"$HOME/.local/bin":* ]]; then
@@ -113,7 +113,14 @@ function installer() {
         chmod +x $GOTOLOC_BIN
     else
         echo "Binary executable 'goto-cli' not found in bin/"
-        exit 1
+        if [ "$DID_ATTEMPT_BUILD" = true ]; then
+            exit 1
+        else
+            DID_ATTEMPT_BUILD=true;
+            echo "Creating binary.."
+            builder;
+            installer;
+        fi
     fi
 
     gotofunc="

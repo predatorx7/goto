@@ -1,6 +1,7 @@
 # Goto
 
-Keeps a key-value record of paths you wish to save for quick access later
+A simple command-line tool for managing shortcuts to your directories.
+Keeps a key-value record of paths you wish to save for quick access later.
 
 ## Installation
 
