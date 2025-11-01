@@ -8,6 +8,10 @@
 - Windows support
 - Easier installation process
 
+## 0.2.0
+
+- Update dependencies
+
 ## 0.1.0
 
 - Migrate to null safety

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-const String _about = """Goto v0.1.0
+const String _about = """Goto v0.2.0
 
 Copyright (c) 2020, Syed Mushaheed. All rights reserved.
 Licensed with BSD 3-Clause License.
