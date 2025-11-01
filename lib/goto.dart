@@ -59,16 +59,13 @@ class _Goto {
     File file = File(path);
     Map<String, String> data = {};
     if (file.existsSync() == true) {
-      final String _fileContent = file.readAsStringSync();
-      if (_fileContent.isNotEmpty) {
+      final String fileContent = file.readAsStringSync();
+      if (fileContent.isNotEmpty) {
         data = Map.from(
             jsonDecode(file.readAsStringSync())); // as Map<String, String>;
       }
     } else {
       file.createSync(recursive: true);
-    }
-    if (data == null) {
-      GotoError('Unexpectedly, data is null');
     }
     return [file, data];
   }

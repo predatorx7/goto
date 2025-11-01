@@ -4,7 +4,7 @@ import 'package:goto/about.dart';
 import 'package:goto/cmd.dart';
 import 'package:goto/nerror.dart';
 
-void main(List<String> arguments) {
+void main(List<String> arguments) async {
   ArgResults res;
 
   // goto cli's command runner interface
@@ -44,9 +44,11 @@ void main(List<String> arguments) {
   } else {
     // Arguments have a command.
     // CommandRunner.run executes the appropriate command from argument.
-    gotoCommand.run(arguments).catchError((e) {
+    try {
+      await gotoCommand.run(arguments);
+    } catch (e) {
       // show error on future usage error
       GotoError.exit(e.toString());
-    });
+    }
   }
 }
