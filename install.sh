@@ -19,6 +19,7 @@ YELLOW=""
 RED=""
 BLUE=""
 MAGENTA=""
+CYAN=""
 RESET=""
 
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-}" != "dumb" ]; then
@@ -28,6 +29,7 @@ if [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-}" != "dumb" ]; then
     RED="\033[31m"
     BLUE="\033[34m"
     MAGENTA="\033[35m"
+    CYAN="\033[36m"
     RESET="\033[0m"
 fi
 
@@ -60,24 +62,31 @@ fatal() {
 TMP_FILES=()
 cleanup() {
     for f in "${TMP_FILES[@]:-}"; do
-        [ -f "$f" ] && rm -f "$f" 2>/dev/null || true
+        [ -n "$f" ] && [ -e "$f" ] && rm -rf "$f" 2>/dev/null || true
     done
 }
 trap cleanup EXIT INT TERM
 
+# Determine script root directory if executed locally from a file
+SCRIPT_DIR=""
+if [ -n "${BASH_SOURCE[0]:-}" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
+fi
+
 # --- Defaults ---
 get_version() {
-    if [ -n "${SCRIPT_DIR:-}" ] && [ -d "${SCRIPT_DIR}/.git" ]; then
+    local target_dir="${1:-${SCRIPT_DIR:-.}}"
+    if [ -n "$target_dir" ] && [ -d "$target_dir/.git" ]; then
         local git_tag
-        git_tag="$(git -C "$SCRIPT_DIR" describe --tags --exact-match 2>/dev/null || true)"
+        git_tag="$(git -C "$target_dir" describe --tags --exact-match 2>/dev/null || true)"
         if [ -n "$git_tag" ]; then
             echo "${git_tag#v}"
             return 0
         fi
     fi
-    if [ -f "${SCRIPT_DIR}/internal/version/version.go" ]; then
+    if [ -n "$target_dir" ] && [ -f "$target_dir/internal/version/version.go" ]; then
         local parsed
-        parsed="$(grep -E 'Version\s*=\s*"[^"]+"' "${SCRIPT_DIR}/internal/version/version.go" | sed -E 's/.*"([^"]+)".*/\1/')"
+        parsed="$(grep -E 'Version\s*=\s*"[^"]+"' "$target_dir/internal/version/version.go" 2>/dev/null | sed -E 's/.*"([^"]+)".*/\1/' || true)"
         if [ -n "$parsed" ]; then
             echo "$parsed"
             return 0
@@ -93,9 +102,8 @@ NON_INTERACTIVE=false
 ALLOW_ROOT=false
 NO_SHELL_CONFIG=false
 COMMAND=""
-
-# Determine script root directory if executed locally
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
+PLATFORM=""
+ARCH=""
 
 usage() {
     cat <<EOF
@@ -134,6 +142,9 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -p|--prefix)
+            if [ -z "${2:-}" ]; then
+                fatal "--prefix requires an argument"
+            fi
             PREFIX="$2"
             shift 2
             ;;
@@ -222,7 +233,14 @@ detect_shell_rc() {
             echo "$HOME/.zshrc"
             ;;
         bash)
-            if [ "$PLATFORM" = "darwin" ]; then
+            local current_os="${PLATFORM:-}"
+            if [ -z "$current_os" ]; then
+                case "$(uname -s)" in
+                    Darwin*) current_os="darwin" ;;
+                    *)       current_os="linux" ;;
+                esac
+            fi
+            if [ "$current_os" = "darwin" ]; then
                 if [ -f "$HOME/.bash_profile" ]; then
                     echo "$HOME/.bash_profile"
                 else
@@ -302,19 +320,19 @@ remove_shell_config() {
 
 # --- Action Implementations ---
 do_build() {
+    local root_dir="${1:-${SCRIPT_DIR:-.}}"
     step "Building goto-cli..."
     if ! find_go; then
         fatal "Go compiler ('go') not found in PATH or standard locations.\nPlease install Go (1.20+) to build goto from source."
     fi
 
-    local root_dir="${SCRIPT_DIR:-.}"
     if [ ! -f "$root_dir/cmd/goto-cli/main.go" ]; then
         fatal "Source directory $root_dir does not contain cmd/goto-cli/main.go"
     fi
 
     mkdir -p "$root_dir/bin"
     local ver
-    ver="$(get_version)"
+    ver="$(get_version "$root_dir")"
     local commit
     commit="$(git -C "$root_dir" rev-parse --short HEAD 2>/dev/null || echo "")"
     local ldflags="-s -w -X github.com/predatorx7/goto/internal/version.Version=${ver}"
@@ -360,9 +378,34 @@ do_install() {
     success "Data directory: $DATA_DIR"
 
     step "[2/4] Compiling goto-cli executable..."
-    local root_dir="${SCRIPT_DIR:-.}"
+    local root_dir="${SCRIPT_DIR:-}"
+    if [ -n "$root_dir" ] && [ -f "$root_dir/cmd/goto-cli/main.go" ]; then
+        : # Local repo directory already identified
+    elif [ -f "./cmd/goto-cli/main.go" ]; then
+        root_dir="."
+    elif [ -n "$root_dir" ] && [ -f "$root_dir/bin/goto-cli" ]; then
+        : # Prebuilt binary found in SCRIPT_DIR
+    elif [ -f "./bin/goto-cli" ]; then
+        root_dir="."
+    else
+        # Remote execution without local source (e.g. curl ... | bash outside repository)
+        step "Fetching goto source from repository..."
+        local tmp_dir
+        tmp_dir="$(mktemp -d 2>/dev/null || mktemp -d -t 'goto-install')"
+        TMP_FILES+=("$tmp_dir")
+        if command -v git >/dev/null 2>&1; then
+            git clone --depth 1 https://github.com/predatorx7/goto.git "$tmp_dir" 2>/dev/null || {
+                curl -fsSL https://github.com/predatorx7/goto/archive/refs/heads/master.tar.gz | tar -xz -C "$tmp_dir" --strip-components=1
+            }
+        else
+            curl -fsSL https://github.com/predatorx7/goto/archive/refs/heads/master.tar.gz | tar -xz -C "$tmp_dir" --strip-components=1
+        fi
+        root_dir="$tmp_dir"
+        VERSION="$(get_version "$root_dir")"
+    fi
+
     if [ -f "$root_dir/cmd/goto-cli/main.go" ]; then
-        do_build
+        do_build "$root_dir"
         cp "$root_dir/bin/goto-cli" "$PREFIX/goto-cli"
     elif [ -f "$root_dir/bin/goto-cli" ]; then
         cp "$root_dir/bin/goto-cli" "$PREFIX/goto-cli"
@@ -394,7 +437,7 @@ do_install() {
     printf "${GREEN}${BOLD}======================================================${RESET}\n\n"
 
     printf "${BOLD}To start using goto, restart your shell or run:${RESET}\n"
-    printf "  ${CYAN:-}source %s${RESET}\n\n" "$rc_file"
+    printf "  ${CYAN}source %s${RESET}\n\n" "$rc_file"
 
     printf "${BOLD}Quick start:${RESET}\n"
     printf "  ${BOLD}goto set work ~/Projects/work${RESET}   # Save directory bookmark\n"
@@ -425,7 +468,7 @@ do_uninstall() {
             remove_data=true
         else
             printf "\n"
-            read -r -p "Do you want to delete all saved bookmarks in $DATA_DIR? [y/N]: " reply
+            read -r -p "Do you want to delete all saved bookmarks in $DATA_DIR? [y/N]: " reply || reply=""
             if [[ "$reply" =~ ^[Yy]$ ]]; then
                 remove_data=true
             fi
