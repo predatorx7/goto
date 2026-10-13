@@ -1,3 +1,17 @@
-archive/
-.dart_tool/
-bin/goto-cli
+# Binaries and build artifacts
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Editor and OS files
+.DS_Store
+.idea/
+*.swp
+*~
+*.bak
+*.tmp

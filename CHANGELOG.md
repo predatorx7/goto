@@ -1,12 +1,15 @@
 # Goto
 
-## Upcoming
+## 0.3.0
 
-- Tests
-- Command auto-completion
-- Support root-user install
-- Windows support
-- Easier installation process
+- Complete high-performance rewrite in Go (Golang) adhering to standard Go project layout and best practices.
+- Zero runtime dependencies: single self-contained native binary.
+- Atomic storage engine with safe JSON persistence to prevent file corruption.
+- Automatic shell completion (tab completion) for commands and saved shortcut keys in Zsh, Bash, and Fish.
+- Comprehensive unit and integration test suite across all modules.
+- Modern installer script (`install.sh`) following standard best practices from tools like Homebrew, Rustup, and Starship.
+- Added Makefile support for standard build, test, install, format, and cleanup targets.
+- Added `--allow-root` flag for root environments when explicitly requested.
 
 ## 0.2.0
 
